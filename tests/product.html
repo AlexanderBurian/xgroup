@@ -56,6 +56,7 @@
       </form>
     </div>
     <pre id="calls">[]</pre>
+    <footer><ul><li><a href="tel:+420725346419">725 346 419</a></li></ul></footer>
     <script>
       document.getElementById('product-detail-form').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -63,5 +64,15 @@
       });
     </script>
     <script src="../kratas-recommendations.js"></script>
+    <output id="globals" hidden></output>
+    <script>
+      document.getElementById('globals').textContent = JSON.stringify({
+        visibilityTitle: window.__xgKratasVisibilityTitleInstalled,
+        carouselClassicLayout: window.carouselClassicLayout,
+        carouselFullWidth: window.carouselFullWidth,
+        productsSlider: window.productsSlider,
+        homepageRatings: window.homepageRatings
+      });
+    </script>
   </body>
 </html>

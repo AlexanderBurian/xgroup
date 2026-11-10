@@ -7,7 +7,10 @@ Frontend doplňky pro Shoptet.
 Do pole **Vzhled a obsah → Editor → HTML kód → Zápatí** vložte obsah souboru
 `shoptet-footer-loader.html`.
 
-Widget se vykreslí jen na detailu produktu. Načte první tři koupitelné položky
+Jediný loader zajišťuje také nastavení homepage carouselu, homepage recenze,
+návratový titulek neaktivní karty a doplnění IČO v zápatí.
+
+Produktový widget se vykreslí jen na detailu produktu. Načte první tři koupitelné položky
 z kategorie `/prislusenstvi/`, vynechá právě otevřený produkt a zaškrtnuté
 položky přidá do košíku společně s hlavním produktem přes nativní Shoptet
 JavaScript API.

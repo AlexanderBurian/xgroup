@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Kratas homepage fixture</title>
+    <style>
+      body { margin: 0; color: #171717; font: 16px/1.5 Arial, sans-serif; }
+      .container { width: min(1180px, calc(100% - 40px)); margin: auto; }
+      #footer { min-height: 160px; padding: 30px; background: #292929; color: white; }
+    </style>
+    <script>
+      window.fetch = function () {
+        return Promise.resolve({
+          ok: true,
+          json: function () {
+            return Promise.resolve({
+              averageScore: 4.7,
+              ratingsCount: 3,
+              ratings: [
+                { fullName: 'První zákazník', rating: 5, date: '2026-11-01', description: 'První testovací hodnocení.' },
+                { fullName: 'Druhý zákazník', rating: 4, date: '2026-11-02', description: 'Druhé testovací hodnocení.' },
+                { fullName: 'Třetí zákazník', rating: 5, date: '2026-11-03', description: 'Třetí testovací hodnocení.' }
+              ]
+            });
+          }
+        });
+      };
+    </script>
+  </head>
+  <body>
+    <main><div class="container"><h1>Homepage</h1></div></main>
+    <footer id="footer"><ul><li><a href="tel:+420725346419">725 346 419</a></li></ul></footer>
+    <script src="../kratas-recommendations.js"></script>
+    <output id="globals" hidden></output>
+    <script>
+      document.getElementById('globals').textContent = JSON.stringify({
+        visibilityTitle: window.__xgKratasVisibilityTitleInstalled,
+        carouselClassicLayout: window.carouselClassicLayout,
+        carouselFullWidth: window.carouselFullWidth,
+        carouselTextAlign: window.carouselTextAlign,
+        carouselOverlay: window.carouselOverlay,
+        carouselArrowsOnMobile: window.carouselArrowsOnMobile,
+        productsSlider: window.productsSlider,
+        productsSliderOnMobile: window.productsSliderOnMobile,
+        homepageRatings: window.homepageRatings
+      });
+    </script>
+  </body>
+</html>
