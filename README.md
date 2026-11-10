@@ -11,6 +11,6 @@ Jediný loader zajišťuje také nastavení homepage carouselu, homepage recenze
 návratový titulek neaktivní karty a doplnění IČO v zápatí.
 
 Produktový widget se vykreslí jen na detailu produktu. Načte první tři koupitelné položky
-z kategorie `/prislusenstvi/`, vynechá právě otevřený produkt a zaškrtnuté
+z aktuální kategorie detailu, vynechá právě otevřený produkt a zaškrtnuté
 položky přidá do košíku společně s hlavním produktem přes nativní Shoptet
 JavaScript API.

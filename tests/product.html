@@ -22,20 +22,23 @@
     <script>
       var categoryHtml = [
         '<div id="products" class="products products-page products-block">',
-        '<div class="product"><div class="p" data-micro-product-id="235"><a class="image"><img src="https://placehold.co/72"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/current/"><span data-micro="name">Aktuální produkt</span></a></div><div class="p-bottom"><div class="price-final">249 Kč</div><p class="p-desc">Aktuální položka.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
-        '<div class="product"><div class="p" data-micro-product-id="101"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=A"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/a/"><span data-micro="name">Doporučený produkt A</span></a></div><div class="p-bottom"><div class="price-final">299 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
-        '<div class="product"><div class="p" data-micro-product-id="102"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=B"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/b/"><span data-micro="name">Doporučený produkt B</span></a></div><div class="p-bottom"><div class="price-final">329 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
-        '<div class="product"><div class="p" data-micro-product-id="103"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=C"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/c/"><span data-micro="name">Doporučený produkt C</span></a></div><div class="p-bottom"><div class="price-final">399 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="235"><a class="image"><img src="https://placehold.co/72"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/current/"><span data-micro="name">Aktuální produkt</span></a><span data-micro="sku">CURRENT</span></div><div class="p-bottom"><div class="price-final">249 Kč</div><p class="p-desc">Aktuální položka.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="101"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=A"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/a/"><span data-micro="name">Doporučený produkt A</span></a><span data-micro="sku">CODE-A</span></div><div class="p-bottom"><div class="price-final">299 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="102"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=B"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/b/"><span data-micro="name">Doporučený produkt B</span></a><span data-micro="sku">CODE-B</span></div><div class="p-bottom"><div class="price-final">329 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="103"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=C"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/c/"><span data-micro="name">Doporučený produkt C</span></a><span data-micro="sku">CODE-C</span></div><div class="p-bottom"><div class="price-final">399 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
         '</div>'
       ].join('');
-      window.fetch = function () {
+      window.requestedCategoryUrl = '';
+      window.fetch = function (url) {
+        window.requestedCategoryUrl = String(url);
+        document.documentElement.setAttribute('data-requested-category', window.requestedCategoryUrl);
         return Promise.resolve({ ok: true, text: function () { return Promise.resolve(categoryHtml); } });
       };
       window.testCalls = [];
       window.shoptet = {
         cartShared: {
           addToCart: function (payload, silent) {
-            window.testCalls.push({ productId: payload.productId, amount: payload.amount, silent: silent });
+            window.testCalls.push({ productCode: payload.productCode, productId: payload.productId, amount: payload.amount, silent: silent });
             document.getElementById('calls').textContent = JSON.stringify(window.testCalls);
             setTimeout(function () { document.dispatchEvent(new Event('ShoptetCartAddCartItem')); }, 0);
           }
@@ -44,6 +47,7 @@
     </script>
   </head>
   <body class="type-detail">
+    <nav class="breadcrumbs"><a href="/">Domů</a><a href="/spravna-kategorie/">Správná kategorie</a></nav>
     <div class="p-detail">
       <form id="product-detail-form">
         <meta itemprop="productID" content="235">

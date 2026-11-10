@@ -2,7 +2,6 @@
   "use strict";
 
   var CONFIG = {
-    categoryUrl: "/prislusenstvi/",
     limit: 3,
     widgetId: "xg-kratas-recommendations",
     title: "Doporučujeme přidat k nákupu",
@@ -50,6 +49,23 @@
     return meta ? cleanText(meta.getAttribute("content")) : "";
   }
 
+  function getCurrentCategoryUrl() {
+    var links = document.querySelectorAll(
+      ".breadcrumbs a[href], .breadcrumb a[href], [data-testid='breadcrumbs'] a[href]"
+    );
+    for (var index = links.length - 1; index >= 0; index -= 1) {
+      var href = links[index].getAttribute("href");
+      if (!href) continue;
+      var url = absoluteUrl(href);
+      try {
+        if (new URL(url).pathname !== "/") return url;
+      } catch (error) {
+        continue;
+      }
+    }
+    return "";
+  }
+
   function parseProducts(html) {
     var parsed = new DOMParser().parseFromString(html, "text/html");
     var currentProductId = getCurrentProductId();
@@ -68,12 +84,16 @@
       var image = card.querySelector("a.image img, img");
       var price = card.querySelector(".price-final, [data-testid='productCardPrice']");
       var description = card.querySelector(".p-desc");
+      var code = cleanText(
+        (card.querySelector("[data-micro='sku']") || {}).textContent
+      );
       var addButton = card.querySelector(
         ".add-to-cart-button, [data-testid='buttonAddToCart']"
       );
 
       if (
         !id ||
+        !code ||
         id === currentProductId ||
         usedIds[id] ||
         !link ||
@@ -88,6 +108,7 @@
       usedIds[id] = true;
       products.push({
         id: id,
+        code: code,
         url: absoluteUrl(link.getAttribute("href")),
         name: cleanText(name.textContent),
         image: absoluteUrl(
@@ -116,8 +137,9 @@
     var checkbox = createElement("input", "xg-rec__checkbox");
     checkbox.type = "checkbox";
     checkbox.id = checkboxId;
-    checkbox.checked = true;
+    checkbox.checked = false;
     checkbox.value = product.id;
+    checkbox.setAttribute("data-product-code", product.code);
     checkbox.setAttribute("aria-label", "Přidat: " + product.name);
 
     var checkLabel = createElement("label", "xg-rec__check-label");
@@ -168,36 +190,34 @@
     style.id = CONFIG.widgetId + "-styles";
     style.textContent =
       "#" + CONFIG.widgetId + "{" +
-        "box-sizing:border-box;width:100%;margin:24px 0;padding:22px 22px 12px;" +
-        "border:1px solid var(--colors-foregrounds-borders-secondary,#dadada);" +
-        "border-radius:var(--apollo-zaoblenie,0);background:var(--colors-surface-primary,#fff);" +
+        "box-sizing:border-box;width:100%;margin:24px 0;padding:24px 24px 14px;" +
+        "border:1px solid #dbe3ee;border-radius:18px;background:#f5f6f8;" +
         "color:var(--colors-foregrounds-content-primary,#1f1f1f);font-family:inherit" +
       "}" +
       "#" + CONFIG.widgetId + " *,#" + CONFIG.widgetId + " *:before,#" + CONFIG.widgetId + " *:after{box-sizing:border-box}" +
       "#" + CONFIG.widgetId + " .xg-rec__title{margin:0 0 3px;font:700 20px/1.25 inherit;color:inherit}" +
       "#" + CONFIG.widgetId + " .xg-rec__subtitle{margin:0 0 14px;color:var(--colors-foregrounds-content-secondary,#4d4d4d);font:400 14px/1.45 inherit}" +
       "#" + CONFIG.widgetId + " .xg-rec__list{display:block}" +
-      "#" + CONFIG.widgetId + " .xg-rec__item{display:grid;grid-template-columns:26px 72px minmax(0,1fr) 24px max-content;align-items:center;gap:12px;min-height:88px;padding:8px 0}" +
+      "#" + CONFIG.widgetId + " .xg-rec__item{display:grid;grid-template-columns:26px 78px minmax(0,1fr) 22px max-content;align-items:center;gap:13px;min-height:96px;padding:9px 0}" +
       "#" + CONFIG.widgetId + " .xg-rec__check-label{position:relative;display:block;width:24px;height:24px;margin:0;cursor:pointer}" +
       "#" + CONFIG.widgetId + " .xg-rec__checkbox{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}" +
-      "#" + CONFIG.widgetId + " .xg-rec__check-mark{display:block;width:24px;height:24px;border:2px solid var(--colors-foregrounds-borders-primary,#919191);border-radius:6px;background:#fff;transition:background .15s,border-color .15s,box-shadow .15s}" +
-      "#" + CONFIG.widgetId + " .xg-rec__checkbox:checked+.xg-rec__check-mark{border-color:var(--color-primary,#2093d9);background:var(--color-primary,#2093d9)}" +
+      "#" + CONFIG.widgetId + " .xg-rec__check-mark{display:block;width:24px;height:24px;border:2px solid #c4d2e4;border-radius:7px;background:#fff;transition:background .15s,border-color .15s,box-shadow .15s}" +
+      "#" + CONFIG.widgetId + " .xg-rec__checkbox:checked+.xg-rec__check-mark{border-color:#55cc00;background:#55cc00}" +
       "#" + CONFIG.widgetId + " .xg-rec__checkbox:checked+.xg-rec__check-mark:after{content:'';display:block;width:10px;height:6px;margin:6px 0 0 5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg)}" +
       "#" + CONFIG.widgetId + " .xg-rec__checkbox:focus-visible+.xg-rec__check-mark{outline:3px solid var(--colors-focus-primary,#09367e);outline-offset:2px}" +
-      "#" + CONFIG.widgetId + " .xg-rec__image-link{display:flex;width:72px;height:72px;align-items:center;justify-content:center;border:1px solid var(--colors-foregrounds-borders-secondary,#dadada);background:#fff;overflow:hidden}" +
+      "#" + CONFIG.widgetId + " .xg-rec__image-link{display:flex;width:78px;height:78px;align-items:center;justify-content:center;border:1px solid #dbe3ee;border-radius:12px;background:#fff;overflow:hidden}" +
       "#" + CONFIG.widgetId + " .xg-rec__image{display:block;width:100%;height:100%;object-fit:contain}" +
       "#" + CONFIG.widgetId + " .xg-rec__content{min-width:0}" +
       "#" + CONFIG.widgetId + " .xg-rec__name{display:block;color:inherit;font:700 15px/1.3 inherit;text-decoration:none}" +
       "#" + CONFIG.widgetId + " .xg-rec__name:hover{color:var(--color-primary-hover,#2ebd46)}" +
       "#" + CONFIG.widgetId + " .xg-rec__description{display:-webkit-box;margin-top:3px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:var(--colors-foregrounds-content-tertiary,#767676);font:400 13px/1.35 inherit}" +
-      "#" + CONFIG.widgetId + " .xg-rec__info{display:flex;width:20px;height:20px;align-items:center;justify-content:center;border:1px solid var(--colors-foregrounds-borders-primary,#919191);border-radius:50%;color:var(--colors-foregrounds-content-tertiary,#767676);font:700 12px/1 inherit;text-decoration:none}" +
-      "#" + CONFIG.widgetId + " .xg-rec__info:hover{border-color:var(--color-primary,#2093d9);color:var(--color-primary,#2093d9)}" +
+      "#" + CONFIG.widgetId + " .xg-rec__info,#" + CONFIG.widgetId + " .xg-rec__info:hover,#" + CONFIG.widgetId + " .xg-rec__info:focus{display:flex;width:18px;height:18px;align-items:center;justify-content:center;border:1px solid #9aabc0;border-radius:50%;background:transparent;color:#8193aa;font:700 11px/1 inherit;text-decoration:none;box-shadow:none;outline:none}" +
       "#" + CONFIG.widgetId + " .xg-rec__price{padding-left:4px;color:inherit;font:700 16px/1.25 inherit;white-space:nowrap;text-align:right}" +
       "@media(max-width:767px){" +
-        "#" + CONFIG.widgetId + "{margin:18px 0;padding:18px 14px 10px}" +
+        "#" + CONFIG.widgetId + "{margin:18px 0;padding:19px 14px 11px;border-radius:16px}" +
         "#" + CONFIG.widgetId + " .xg-rec__title{font-size:18px}" +
-        "#" + CONFIG.widgetId + " .xg-rec__item{grid-template-columns:24px 56px minmax(0,1fr) 20px;gap:9px;min-height:78px}" +
-        "#" + CONFIG.widgetId + " .xg-rec__image-link{width:56px;height:56px}" +
+        "#" + CONFIG.widgetId + " .xg-rec__item{grid-template-columns:24px 66px minmax(0,1fr) 18px;gap:10px;min-height:86px}" +
+        "#" + CONFIG.widgetId + " .xg-rec__image-link{width:66px;height:66px;border-radius:10px}" +
         "#" + CONFIG.widgetId + " .xg-rec__price{grid-column:3/5;padding:0;text-align:left;font-size:15px}" +
         "#" + CONFIG.widgetId + " .xg-rec__description{-webkit-line-clamp:1}" +
       "}";
@@ -223,16 +243,19 @@
   }
 
   function installCartIntegration(widget, productForm) {
-    var pendingIds = [];
+    var pendingProducts = [];
     var extraInFlight = false;
 
     productForm.addEventListener(
       "submit",
       function () {
-        pendingIds = Array.prototype.map.call(
+        pendingProducts = Array.prototype.map.call(
           widget.querySelectorAll(".xg-rec__checkbox:checked"),
           function (checkbox) {
-            return checkbox.value;
+            return {
+              id: checkbox.value,
+              code: checkbox.getAttribute("data-product-code") || ""
+            };
           }
         );
         extraInFlight = false;
@@ -241,15 +264,15 @@
     );
 
     document.addEventListener("ShoptetCartAddCartItem", function () {
-      if (!pendingIds.length) {
+      if (!pendingProducts.length) {
         extraInFlight = false;
         return;
       }
 
       if (extraInFlight) extraInFlight = false;
-      if (extraInFlight || !pendingIds.length) return;
+      if (extraInFlight || !pendingProducts.length) return;
 
-      var productId = pendingIds.shift();
+      var product = pendingProducts.shift();
       extraInFlight = true;
 
       window.setTimeout(function () {
@@ -262,11 +285,11 @@
             throw new Error("Shoptet cart API is not available.");
           }
           window.shoptet.cartShared.addToCart(
-            { productId: Number(productId), amount: 1 },
+            { productCode: product.code, amount: 1 },
             true
           );
         } catch (error) {
-          pendingIds = [];
+          pendingProducts = [];
           extraInFlight = false;
           if (window.console && typeof window.console.error === "function") {
             window.console.error("[xgroup] Recommendation could not be added.", error);
@@ -537,7 +560,10 @@
       return;
     }
 
-    fetch(CONFIG.categoryUrl, { credentials: "same-origin" })
+    var categoryUrl = getCurrentCategoryUrl();
+    if (!categoryUrl) return;
+
+    fetch(categoryUrl, { credentials: "same-origin" })
       .then(function (response) {
         if (!response.ok) throw new Error("Category request failed: " + response.status);
         return response.text();
