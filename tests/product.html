@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Kratas recommendations fixture</title>
+    <style>
+      :root {
+        --color-primary: #2093d9;
+        --color-primary-hover: #2ebd46;
+        --colors-foregrounds-borders-secondary: #dadada;
+        --colors-foregrounds-content-primary: #1f1f1f;
+        --colors-foregrounds-content-secondary: #4d4d4d;
+        --colors-foregrounds-content-tertiary: #767676;
+      }
+      body { margin: 32px; background: #f5f6f8; color: #0f0f0f; font: 16px/1.5 Arial, sans-serif; }
+      .p-info-wrapper { width: min(680px, 100%); margin: auto; padding: 28px; background: white; }
+      .add-to-cart { margin-top: 18px; }
+      .add-to-cart-button { border: 0; border-radius: 999px; padding: 12px 22px; background: #2093d9; color: white; font: inherit; }
+      #calls { width: min(680px, 100%); margin: 16px auto; white-space: pre-wrap; }
+    </style>
+    <script>
+      var categoryHtml = [
+        '<div id="products" class="products products-page products-block">',
+        '<div class="product"><div class="p" data-micro-product-id="235"><a class="image"><img src="https://placehold.co/72"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/current/"><span data-micro="name">Aktuální produkt</span></a></div><div class="p-bottom"><div class="price-final">249 Kč</div><p class="p-desc">Aktuální položka.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="101"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=A"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/a/"><span data-micro="name">Doporučený produkt A</span></a></div><div class="p-bottom"><div class="price-final">299 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="102"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=B"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/b/"><span data-micro="name">Doporučený produkt B</span></a></div><div class="p-bottom"><div class="price-final">329 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '<div class="product"><div class="p" data-micro-product-id="103"><a class="image"><img src="https://placehold.co/72/ffffff/2093d9?text=C"></a><div class="p-in"><div class="p-in-in"><a class="name" href="/c/"><span data-micro="name">Doporučený produkt C</span></a></div><div class="p-bottom"><div class="price-final">399 Kč</div><p class="p-desc">Krátký popis převzatý z kategorie.</p><button class="add-to-cart-button">Do košíku</button></div></div></div></div>',
+        '</div>'
+      ].join('');
+      window.fetch = function () {
+        return Promise.resolve({ ok: true, text: function () { return Promise.resolve(categoryHtml); } });
+      };
+      window.testCalls = [];
+      window.shoptet = {
+        cartShared: {
+          addToCart: function (payload, silent) {
+            window.testCalls.push({ productId: payload.productId, amount: payload.amount, silent: silent });
+            document.getElementById('calls').textContent = JSON.stringify(window.testCalls);
+            setTimeout(function () { document.dispatchEvent(new Event('ShoptetCartAddCartItem')); }, 0);
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="type-detail">
+    <div class="p-detail">
+      <form id="product-detail-form">
+        <meta itemprop="productID" content="235">
+        <div class="p-info-wrapper">
+          <h1>Aktuální produkt</h1>
+          <div class="add-to-cart">
+            <button class="add-to-cart-button" type="submit">Přidat do košíku</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <pre id="calls">[]</pre>
+    <script>
+      document.getElementById('product-detail-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        setTimeout(function () { document.dispatchEvent(new Event('ShoptetCartAddCartItem')); }, 0);
+      });
+    </script>
+    <script src="../kratas-recommendations.js"></script>
+  </body>
+</html>
