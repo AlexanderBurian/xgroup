@@ -112,7 +112,9 @@
         url: absoluteUrl(link.getAttribute("href")),
         name: cleanText(name.textContent),
         image: absoluteUrl(
-          image.getAttribute("src") || image.getAttribute("data-src")
+          image.getAttribute("data-src") ||
+            image.getAttribute("data-lazy-src") ||
+            image.getAttribute("src")
         ),
         price: cleanText(price.textContent),
         description: cleanText(description && description.textContent)
