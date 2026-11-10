@@ -7,6 +7,9 @@ Frontend doplňky pro Shoptet.
 Do pole **Vzhled a obsah → Editor → HTML kód → Zápatí** vložte obsah souboru
 `shoptet-footer-loader.html`.
 
+Loader používá konkrétní commitovou URL, aby prohlížeč nemohl držet starší
+verzi skriptu z dlouhodobé cache CDN.
+
 Jediný loader zajišťuje také nastavení homepage carouselu, homepage recenze,
 návratový titulek neaktivní karty a doplnění IČO v zápatí.
 
