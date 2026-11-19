@@ -184,15 +184,17 @@
     + '#xg-reco .xg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}'
     + '#xg-reco .xg-card{border:1px solid #e7e7ec;border-radius:12px;padding:16px 13px;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;box-shadow:none}'
     + '#xg-reco .xg-card:hover{box-shadow:none}'
-    + '#xg-reco .xg-card .xg-imgw{height:164px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}'
-    + '#xg-reco .xg-card img{max-width:100%;max-height:164px;object-fit:contain}'
+    + '#xg-reco .xg-card .xg-imgw{height:190px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}'
+    + '#xg-reco .xg-card img{max-width:100%;max-height:190px;object-fit:contain}'
     + '#xg-reco .xg-stars{color:#f5a623;font-size:13px;letter-spacing:1px;line-height:1;margin-bottom:7px}'
     + '#xg-reco .xg-card .xg-cn{font-size:13.5px;font-weight:600;color:#26262c;line-height:1.35;min-height:37px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}'
     + '#xg-reco .xg-card .xg-cp{font-size:17px;font-weight:700;color:#0f0f0f;margin-bottom:12px}'
-    /* tlačítko = nativní Apollo třída .btn.btn-conversion → 1:1 jejich styl:
-       modrá, zelený hover (--color-secondary-hover #2ebd46), radius, stín i přechod */
-    + '#xg-reco .xg-buy{margin-top:auto;justify-content:center;gap:8px;font-size:14px}'
-    + '#xg-reco .xg-buy svg{width:17px;height:17px;fill:currentColor}'
+    /* tlačítko = nativní Apollo třída .btn.btn-conversion (jejich modrá + zelený hover
+       #2ebd46), ale zpět na normální/menší velikost jako dřív (bez velkého min-height a stínu) */
+    + '#xg-reco .xg-buy{margin-top:auto;min-height:0;height:44px;padding:0 16px;line-height:1;'
+    + 'justify-content:center;gap:8px;font-size:14px;box-shadow:none}'
+    + '#xg-reco .xg-buy:hover{box-shadow:none}'
+    + '#xg-reco .xg-buy svg{width:16px;height:16px;fill:currentColor}'
     + '#xg-reco .xg-buy.xg-done{background:var(--color-secondary-hover,#2ebd46);border-color:var(--color-secondary-hover,#2ebd46);color:#fff}'
     + '#xg-reco .xg-buy.xg-done svg{fill:#fff}'
     + '#xg-reco .xg-foot{flex:0 0 auto;display:flex;gap:12px;padding:14px 18px;border-top:1px solid #ededf0;background:#fff}'
