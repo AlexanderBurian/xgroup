@@ -12,6 +12,17 @@
   if (window.__xgKratasReco) return;
   window.__xgKratasReco = true;
 
+  /* Zachováno z předchozí verze: konfigurace Apollo hero/slideru.
+     (Bez těchto globálů se rozbije hero banner na homepage.) */
+  window.carouselClassicLayout = true;
+  window.carouselFullWidth = false;
+  window.carouselTextAlign = "left";
+  window.carouselOverlay = false;
+  window.carouselArrowsOnMobile = false;
+  window.productsSlider = true;
+  window.productsSliderOnMobile = true;
+  window.homepageRatings = false;
+
   /* Zachováno z předchozí verze: lákavý titulek karty při odchodu na jiný tab */
   (function () {
     if (window.__xgKratasVisibilityTitle) return;
@@ -150,9 +161,9 @@
     + '#xg-reco{position:fixed;inset:0;z-index:2147483000;font-family:Roboto,"Segoe UI",Arial,sans-serif;'
     + 'opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}'
     + '#xg-reco.xg-open{opacity:1;visibility:visible}'
-    + '#xg-reco .xg-ov{position:absolute;inset:0;background:rgba(10,12,20,.55)}'
-    + '#xg-reco .xg-panel{position:absolute;top:0;right:0;height:100%;width:640px;max-width:100%;background:#fff;'
-    + 'display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.25);transform:translateX(100%);'
+    + '#xg-reco .xg-ov{position:absolute;inset:0;background:rgba(18,20,30,.10);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}'
+    + '#xg-reco .xg-panel{position:absolute;top:0;right:0;height:100%;width:760px;max-width:100%;background:#fff;'
+    + 'display:flex;flex-direction:column;box-shadow:-10px 0 34px rgba(0,0,0,.14);transform:translateX(100%);'
     + 'transition:transform .28s cubic-bezier(.22,.61,.36,1)}'
     + '#xg-reco.xg-open .xg-panel{transform:translateX(0)}'
     + '#xg-reco .xg-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #ededf0;flex:0 0 auto}'
@@ -163,7 +174,7 @@
     + '#xg-reco .xg-x:hover{background:#f2f2f4;color:#333}'
     + '#xg-reco .xg-body{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px}'
     + '#xg-reco .xg-added{display:flex;align-items:center;gap:12px;padding:4px 0 16px;border-bottom:1px solid #ededf0}'
-    + '#xg-reco .xg-added img{width:54px;height:54px;object-fit:contain;flex:0 0 auto}'
+    + '#xg-reco .xg-added img{width:66px;height:66px;object-fit:contain;flex:0 0 auto}'
     + '#xg-reco .xg-added .xg-an{flex:1 1 auto;min-width:0}'
     + '#xg-reco .xg-added .xg-an b{display:block;font-size:14px;font-weight:600;color:#1a1a1f;line-height:1.3;margin-bottom:8px}'
     + '#xg-reco .xg-step{display:inline-flex;align-items:center;border:1px solid #d9d9df;border-radius:6px;overflow:hidden;height:32px}'
@@ -172,19 +183,20 @@
     + '#xg-reco .xg-step .xg-q{min-width:46px;text-align:center;font-size:14px;color:#1a1a1f}'
     + '#xg-reco .xg-added .xg-ap{font-size:18px;font-weight:700;color:#0f0f0f;white-space:nowrap;flex:0 0 auto}'
     + '#xg-reco .xg-sec{font-size:16px;font-weight:700;color:#14141a;margin:18px 0 12px}'
-    + '#xg-reco .xg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}'
-    + '#xg-reco .xg-card{border:1px solid #ececf0;border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff}'
-    + '#xg-reco .xg-card .xg-imgw{height:96px;display:flex;align-items:center;justify-content:center;margin-bottom:6px}'
-    + '#xg-reco .xg-card img{max-width:100%;max-height:96px;object-fit:contain}'
-    + '#xg-reco .xg-stars{color:#f5a623;font-size:12px;letter-spacing:1px;line-height:1;margin-bottom:6px}'
-    + '#xg-reco .xg-card .xg-cn{font-size:12.5px;font-weight:600;color:#26262c;line-height:1.3;min-height:33px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}'
-    + '#xg-reco .xg-card .xg-cp{font-size:15px;font-weight:700;color:#0f0f0f;margin-bottom:10px}'
-    + '#xg-reco .xg-buy{margin-top:auto;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;'
-    + 'background:#fff;border:1px solid #d9dbe2;color:#1b1b22;border-radius:40px;height:38px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}'
-    + '#xg-reco .xg-buy svg{width:16px;height:16px;fill:#2093D9}'
-    + '#xg-reco .xg-buy:hover{border-color:#2093D9;color:#2093D9}'
-    + '#xg-reco .xg-buy.xg-done{background:#eaf6ea;border-color:#3c9a2e;color:#2f7d24}'
-    + '#xg-reco .xg-buy.xg-done svg{fill:#3c9a2e}'
+    + '#xg-reco .xg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}'
+    + '#xg-reco .xg-card{border:1px solid #e7e7ec;border-radius:12px;padding:16px 13px;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;box-shadow:none}'
+    + '#xg-reco .xg-card:hover{box-shadow:none}'
+    + '#xg-reco .xg-card .xg-imgw{height:132px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}'
+    + '#xg-reco .xg-card img{max-width:100%;max-height:132px;object-fit:contain}'
+    + '#xg-reco .xg-stars{color:#f5a623;font-size:13px;letter-spacing:1px;line-height:1;margin-bottom:7px}'
+    + '#xg-reco .xg-card .xg-cn{font-size:13.5px;font-weight:600;color:#26262c;line-height:1.35;min-height:37px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}'
+    + '#xg-reco .xg-card .xg-cp{font-size:17px;font-weight:700;color:#0f0f0f;margin-bottom:12px}'
+    + '#xg-reco .xg-buy{margin-top:auto;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;'
+    + 'background:#2093D9;border:1px solid #2093D9;color:#fff;border-radius:40px;height:44px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:none;transition:background .15s,border-color .15s}'
+    + '#xg-reco .xg-buy svg{width:17px;height:17px;fill:#fff}'
+    + '#xg-reco .xg-buy:hover{background:#1b83c4;border-color:#1b83c4;box-shadow:none}'
+    + '#xg-reco .xg-buy.xg-done{background:#43a047;border-color:#43a047;color:#fff}'
+    + '#xg-reco .xg-buy.xg-done svg{fill:#fff}'
     + '#xg-reco .xg-foot{flex:0 0 auto;display:flex;gap:12px;padding:14px 18px;border-top:1px solid #ededf0;background:#fff}'
     + '#xg-reco .xg-foot a{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:46px;border-radius:40px;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer}'
     + '#xg-reco .xg-cont{background:#fff;border:1px solid #d9dbe2;color:#2b2b33}'
