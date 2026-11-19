@@ -159,13 +159,11 @@
   var CSS = ''
     + '#xg-reco,#xg-reco *{box-sizing:border-box}'
     + '#xg-reco{position:fixed;inset:0;z-index:2147483000;font-family:Roboto,"Segoe UI",Arial,sans-serif;'
-    + 'opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}'
-    + '#xg-reco.xg-open{opacity:1;visibility:visible}'
+    + 'opacity:0;visibility:hidden}'
+    + '#xg-reco.xg-open{opacity:1;visibility:visible}'     /* instantně, bez animace */
     + '#xg-reco .xg-ov{position:absolute;inset:0;background:rgba(18,20,30,.10);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}'
     + '#xg-reco .xg-panel{position:absolute;top:0;right:0;height:100%;width:760px;max-width:100%;background:#fff;'
-    + 'display:flex;flex-direction:column;box-shadow:-10px 0 34px rgba(0,0,0,.14);transform:translateX(100%);'
-    + 'transition:transform .28s cubic-bezier(.22,.61,.36,1)}'
-    + '#xg-reco.xg-open .xg-panel{transform:translateX(0)}'
+    + 'display:flex;flex-direction:column;box-shadow:-10px 0 34px rgba(0,0,0,.14)}'
     + '#xg-reco .xg-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #ededf0;flex:0 0 auto}'
     + '#xg-reco .xg-check{width:26px;height:26px;border-radius:50%;background:#3c9a2e;display:flex;align-items:center;justify-content:center;flex:0 0 auto}'
     + '#xg-reco .xg-check svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:3}'
@@ -194,7 +192,7 @@
     + '#xg-reco .xg-buy{margin-top:auto;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;'
     + 'background:#2093D9;border:1px solid #2093D9;color:#fff;border-radius:40px;height:44px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:none;transition:background .15s,border-color .15s}'
     + '#xg-reco .xg-buy svg{width:17px;height:17px;fill:#fff}'
-    + '#xg-reco .xg-buy:hover{background:#1b83c4;border-color:#1b83c4;box-shadow:none}'
+    + '#xg-reco .xg-buy:hover{background:#43a047;border-color:#43a047;box-shadow:none}'
     + '#xg-reco .xg-buy.xg-done{background:#43a047;border-color:#43a047;color:#fff}'
     + '#xg-reco .xg-buy.xg-done svg{fill:#fff}'
     + '#xg-reco .xg-foot{flex:0 0 auto;display:flex;gap:12px;padding:14px 18px;border-top:1px solid #ededf0;background:#fff}'
@@ -345,7 +343,7 @@
     renderAdded(item);
     renderGrid(item.priceId);
     root.querySelector(".xg-body").scrollTop = 0;
-    requestAnimationFrame(function () { root.classList.add("xg-open"); });
+    root.classList.add("xg-open");   // instantně
     try { document.documentElement.style.overflow = "hidden"; } catch (e) {}
   }
   function close() {
