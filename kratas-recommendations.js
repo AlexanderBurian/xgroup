@@ -184,16 +184,16 @@
     + '#xg-reco .xg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}'
     + '#xg-reco .xg-card{border:1px solid #e7e7ec;border-radius:12px;padding:16px 13px;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;box-shadow:none}'
     + '#xg-reco .xg-card:hover{box-shadow:none}'
-    + '#xg-reco .xg-card .xg-imgw{height:132px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}'
-    + '#xg-reco .xg-card img{max-width:100%;max-height:132px;object-fit:contain}'
+    + '#xg-reco .xg-card .xg-imgw{height:164px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}'
+    + '#xg-reco .xg-card img{max-width:100%;max-height:164px;object-fit:contain}'
     + '#xg-reco .xg-stars{color:#f5a623;font-size:13px;letter-spacing:1px;line-height:1;margin-bottom:7px}'
     + '#xg-reco .xg-card .xg-cn{font-size:13.5px;font-weight:600;color:#26262c;line-height:1.35;min-height:37px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}'
     + '#xg-reco .xg-card .xg-cp{font-size:17px;font-weight:700;color:#0f0f0f;margin-bottom:12px}'
-    + '#xg-reco .xg-buy{margin-top:auto;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;'
-    + 'background:#2093D9;border:1px solid #2093D9;color:#fff;border-radius:40px;height:44px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:none;transition:background .15s,border-color .15s}'
-    + '#xg-reco .xg-buy svg{width:17px;height:17px;fill:#fff}'
-    + '#xg-reco .xg-buy:hover{background:#43a047;border-color:#43a047;box-shadow:none}'
-    + '#xg-reco .xg-buy.xg-done{background:#43a047;border-color:#43a047;color:#fff}'
+    /* tlačítko = nativní Apollo třída .btn.btn-conversion → 1:1 jejich styl:
+       modrá, zelený hover (--color-secondary-hover #2ebd46), radius, stín i přechod */
+    + '#xg-reco .xg-buy{margin-top:auto;justify-content:center;gap:8px;font-size:14px}'
+    + '#xg-reco .xg-buy svg{width:17px;height:17px;fill:currentColor}'
+    + '#xg-reco .xg-buy.xg-done{background:var(--color-secondary-hover,#2ebd46);border-color:var(--color-secondary-hover,#2ebd46);color:#fff}'
     + '#xg-reco .xg-buy.xg-done svg{fill:#fff}'
     + '#xg-reco .xg-foot{flex:0 0 auto;display:flex;gap:12px;padding:14px 18px;border-top:1px solid #ededf0;background:#fff}'
     + '#xg-reco .xg-foot a{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:46px;border-radius:40px;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer}'
@@ -311,8 +311,8 @@
         +   '<div class="xg-stars">★★★★★</div>'
         +   '<a class="xg-cn" href="' + esc(p.url) + '" style="text-decoration:none">' + esc(p.name) + '</a>'
         +   '<div class="xg-cp">' + fmt(p.price) + '</div>'
-        +   '<button type="button" class="xg-buy" data-id="' + esc(p.id) + '" data-pid="' + esc(p.priceId) + '">'
-        +     cartIcon() + '<span>Do košíku</span>'
+        +   '<button type="button" class="btn btn-conversion xg-buy" data-id="' + esc(p.id) + '" data-pid="' + esc(p.priceId) + '">'
+        +     '<span>Do košíku</span>' + cartIcon()
         +   '</button>'
         + '</div>';
     }).join("");
