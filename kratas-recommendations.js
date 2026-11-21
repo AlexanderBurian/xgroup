@@ -44,8 +44,8 @@
     var css = ''
       /* zelená = barva loga KRATAS (#67b015) */
       + '#xg-promo{background:#67b015;color:#fff;font-family:Roboto,"Segoe UI",Arial,sans-serif;'
-      + 'font-size:15px;line-height:1.3;font-weight:700;text-align:center;padding:7px 12px;'
-      + 'display:flex;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:18px;row-gap:5px;'
+      + 'font-size:16px;line-height:1.2;font-weight:700;text-align:center;padding:12px 14px;min-height:52px;'
+      + 'display:flex;flex-wrap:wrap;align-items:center;align-content:center;justify-content:center;column-gap:20px;row-gap:8px;'
       + 'width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.28);position:relative;z-index:1}'
       + '#xg-promo.xg-fixed{position:fixed;top:0;left:0;right:0;z-index:9}'
       /* tlačítko MENU je při otevřeném menu fixed top:0 -> posunout pod pruh */
@@ -56,15 +56,17 @@
       + '#xg-promo .xg-pm{overflow-wrap:anywhere}'
       + '#xg-promo .xg-pm strong{font-weight:800;letter-spacing:.04em;white-space:nowrap}'
       /* odpočet: "KONČÍ ZA" + bílé štítky s tmavě zelenými čísly */
-      + '#xg-promo .xg-pc{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:15px}'
+      /* štítky mají pevnou výšku a obsah centrovaný flexem -> stejné místo nahoře i dole */
+      + '#xg-promo .xg-pc{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;font-size:16px}'
       + '#xg-promo .xg-pl{font-weight:800;letter-spacing:.03em;margin-right:2px}'
-      + '#xg-promo .xg-pc i{font-style:normal;display:inline-block;background:#fff;color:#2f5a00;text-shadow:none;'
-      + 'font-weight:800;font-variant-numeric:tabular-nums;border-radius:5px;padding:2px 7px;line-height:1.25;'
-      + 'box-shadow:0 1px 2px rgba(0,0,0,.18)}'
+      + '#xg-promo .xg-pc i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;'
+      + 'height:28px;min-width:40px;padding:0 8px;line-height:1;background:#fff;color:#2f5a00;text-shadow:none;'
+      + 'font-weight:800;font-variant-numeric:tabular-nums;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.18)}'
       + '#xg-promo .xg-pc i small{font-size:.78em;font-weight:700;margin-left:1px}'
-      + '@media(max-width:767px){#xg-promo{font-size:13px;padding:6px 8px;column-gap:10px}'
-      + '#xg-promo .xg-pc{font-size:13px;gap:4px}#xg-promo .xg-pc i{padding:1px 5px;border-radius:4px}}'
-      + '@media(max-width:340px){#xg-promo{font-size:12px}#xg-promo .xg-pc{font-size:12px;gap:3px}#xg-promo .xg-pc i{padding:1px 4px}}';
+      + '@media(max-width:767px){#xg-promo{font-size:14px;padding:10px 8px;min-height:0;column-gap:10px;row-gap:7px}'
+      + '#xg-promo .xg-pc{font-size:14px;gap:5px}#xg-promo .xg-pc i{height:25px;min-width:34px;padding:0 6px;border-radius:5px}}'
+      + '@media(max-width:340px){#xg-promo{font-size:12.5px}#xg-promo .xg-pc{font-size:12.5px;gap:4px}'
+      + '#xg-promo .xg-pc i{height:23px;min-width:30px;padding:0 5px}}';
 
     // aktuální "nástěnný" čas v Praze -> {y,mo,d,wd,h,mi,s}
     var fmt = null;
@@ -109,9 +111,9 @@
       var d = Math.floor(s / 86400); s -= d * 86400;
       var h = Math.floor(s / 3600); s -= h * 3600;
       var m = Math.floor(s / 60); s -= m * 60;
+      function chip(v, u) { return '<i><span>' + v + '<small>' + u + '</small></span></i>'; }
       cd.innerHTML = '<span class="xg-pl">KONČÍ ZA</span>'
-        + '<i>' + d + '<small>d</small></i><i>' + pad(h) + '<small>h</small></i>'
-        + '<i>' + pad(m) + '<small>m</small></i><i>' + pad(s) + '<small>s</small></i>';
+        + chip(d, "d") + chip(pad(h), "h") + chip(pad(m), "m") + chip(pad(s), "s");
     }
 
     /* Na mobilu má Apollo horní lištu i hlavičku position:fixed (top 0 / 50px)
