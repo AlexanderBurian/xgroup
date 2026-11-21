@@ -70,7 +70,15 @@
       + '#xg-promo .xg-pm,#xg-promo .xg-pl,#xg-promo .xg-pc i>span{text-box:trim-both cap alphabetic}}'
       + '@media(max-width:767px){#xg-promo{font-size:14px;padding:10px 8px;min-height:46px;column-gap:.6em}'
       + '#xg-promo .xg-pm strong,#xg-promo .xg-pl{letter-spacing:0}'
-      + '#xg-promo .xg-pc{gap:.3em}#xg-promo .xg-pc i{min-width:0;padding:0 .4em;border-radius:.3em}}';
+      + '#xg-promo .xg-pc{gap:.3em}#xg-promo .xg-pc i{min-width:0;padding:0 .4em;border-radius:.3em}}'
+      /* VELKOOBCHOD v menu: plný zelený štítek (barva loga), bílý text */
+      + '#navigation a[href$="/velkoobchod/"]>b{display:inline-block;background:#67b015;color:#fff;'
+      + 'border-radius:8px;padding:10px 14px;line-height:1;font-weight:800;letter-spacing:.02em;text-shadow:none}'
+      + '#navigation a[href$="/velkoobchod/"]:hover>b,#navigation a[href$="/velkoobchod/"]:focus>b{background:#5b9c12;color:#fff}'
+      + '@supports (text-box:trim-both cap alphabetic){#navigation a[href$="/velkoobchod/"]>b{text-box:trim-both cap alphabetic;padding:11px 15px}}'
+      /* PC: odkaz bez svislého paddingu -> štítek se vycentruje v 60px řádku menu */
+      + 'html:not(.xg-mobile) #navigation .navigation-in>ul>li>a[href$="/velkoobchod/"]{padding-top:0;padding-bottom:0;padding-right:8px}'
+      + 'html.xg-mobile #navigation .navigation-in>ul>li>a[href$="/velkoobchod/"]{padding-top:12px;padding-bottom:12px}';
 
     // aktuální "nástěnný" čas v Praze -> {y,mo,d,wd,h,mi,s}
     var fmt = null;
@@ -139,6 +147,27 @@
       }
     }
 
+    /* VELKOOBCHOD: na mobilu první položka menu, na PC zhruba uprostřed
+       (za 3. kategorií). Přesouvá se jen při změně; na PC pak Shoptet
+       přepočítá, co se schová do "VÍCE". */
+    function placeWholesale(mobile) {
+      var ul = document.querySelector("#navigation .navigation-in > ul.menu-level-1");
+      if (!ul) return;
+      var items = [].slice.call(ul.children), li = null;
+      items.forEach(function (l) {
+        var a = l.firstElementChild;
+        if (a && a.tagName === "A" && /\/velkoobchod\/?$/.test(a.getAttribute("href") || "")) li = l;
+      });
+      if (!li) return;
+      var others = items.filter(function (l) { return l !== li; });
+      var target = mobile ? others[0] : (others[3] || null);
+      if (li.nextElementSibling === target && (target || li === ul.lastElementChild)) return;
+      ul.insertBefore(li, target);
+      if (!mobile) {
+        try { if (window.shoptet && shoptet.menu && shoptet.menu.splitMenu) shoptet.menu.splitMenu(); } catch (e) {}
+      }
+    }
+
     /* Na mobilu má Apollo horní lištu i hlavičku position:fixed (top 0 / 50px)
        a obsah odsazený padding-top. Pruh tam proto připneme nahoru taky a
        pevné prvky + odsazení obsahu posuneme o jeho skutečnou výšku. */
@@ -161,6 +190,8 @@
       var fixedMode = false;
       each(function (el) { if (getComputedStyle(el).position === "fixed") fixedMode = true; });
       bar.classList.toggle("xg-fixed", fixedMode);
+      document.documentElement.classList.toggle("xg-mobile", fixedMode);
+      placeWholesale(fixedMode);
       fit();
       var hgt = bar.offsetHeight;
       if (fixedMode) {
