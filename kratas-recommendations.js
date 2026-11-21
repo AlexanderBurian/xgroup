@@ -44,29 +44,33 @@
     var css = ''
       /* zelená = barva loga KRATAS (#67b015) */
       + '#xg-promo{background:#67b015;color:#fff;font-family:Roboto,"Segoe UI",Arial,sans-serif;'
+      /* vždy jeden řádek: nowrap + JS fit() zmenší písmo, když se nevejde (rozměry jsou v em) */
       + 'font-size:16px;line-height:1.2;font-weight:700;text-align:center;padding:12px 14px;min-height:52px;'
-      + 'display:flex;flex-wrap:wrap;align-items:center;align-content:center;justify-content:center;column-gap:20px;row-gap:8px;'
-      + 'width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.28);position:relative;z-index:1}'
+      + 'display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;justify-content:center;column-gap:1.25em;'
+      + 'width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;text-shadow:0 0 2px rgba(0,0,0,.3);position:relative;z-index:1}'
       + '#xg-promo.xg-fixed{position:fixed;top:0;left:0;right:0;z-index:9}'
       /* tlačítko MENU je při otevřeném menu fixed top:0 -> posunout pod pruh */
       + 'body.navigation-window-visible .toggle-window[data-target="navigation"]{margin-top:var(--xg-promo-h,0px)}'
       /* přihlášení / košík na mobilu: fixed top:50px pod lištou -> taky posunout */
       + '.user-action .popup-widget{margin-top:var(--xg-promo-h,0px)}'
       + '#xg-promo *{box-sizing:border-box}'
-      + '#xg-promo .xg-pm{overflow-wrap:anywhere}'
-      + '#xg-promo .xg-pm strong{font-weight:800;letter-spacing:.04em;white-space:nowrap}'
+      + '#xg-promo .xg-pm{flex:0 0 auto}'
+      + '#xg-promo .xg-pm strong{font-weight:800;letter-spacing:.04em}'
       /* odpočet: "KONČÍ ZA" + bílé štítky s tmavě zelenými čísly */
       /* štítky mají pevnou výšku a obsah centrovaný flexem -> stejné místo nahoře i dole */
-      + '#xg-promo .xg-pc{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;font-size:16px}'
-      + '#xg-promo .xg-pl{font-weight:800;letter-spacing:.03em;margin-right:2px}'
+      + '#xg-promo .xg-pc{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:.375em}'
+      + '#xg-promo .xg-pl{font-weight:800;letter-spacing:.03em;margin-right:.125em}'
       + '#xg-promo .xg-pc i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;'
-      + 'height:28px;min-width:40px;padding:0 8px;line-height:1;background:#fff;color:#2f5a00;text-shadow:none;'
-      + 'font-weight:800;font-variant-numeric:tabular-nums;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.18)}'
+      + 'height:1.75em;min-width:2.5em;padding:0 .5em;line-height:1;background:#fff;color:#2f5a00;text-shadow:none;'
+      + 'font-weight:800;font-variant-numeric:tabular-nums;border-radius:.375em;box-shadow:0 0 3px rgba(0,0,0,.16)}'
       + '#xg-promo .xg-pc i small{font-size:.78em;font-weight:700;margin-left:1px}'
-      + '@media(max-width:767px){#xg-promo{font-size:14px;padding:10px 8px;min-height:0;column-gap:10px;row-gap:7px}'
-      + '#xg-promo .xg-pc{font-size:14px;gap:5px}#xg-promo .xg-pc i{height:25px;min-width:34px;padding:0 6px;border-radius:5px}}'
-      + '@media(max-width:340px){#xg-promo{font-size:12.5px}#xg-promo .xg-pc{font-size:12.5px;gap:4px}'
-      + '#xg-promo .xg-pc i{height:23px;min-width:30px;padding:0 5px}}';
+      /* optické centrování: box textu = od vršku verzálek po účaří (bez prázdného místa
+         nad/pod písmem), flex pak centruje samotná písmena a číslice */
+      + '@supports (text-box:trim-both cap alphabetic){'
+      + '#xg-promo .xg-pm,#xg-promo .xg-pl,#xg-promo .xg-pc i>span{text-box:trim-both cap alphabetic}}'
+      + '@media(max-width:767px){#xg-promo{font-size:14px;padding:10px 8px;min-height:46px;column-gap:.6em}'
+      + '#xg-promo .xg-pm strong,#xg-promo .xg-pl{letter-spacing:0}'
+      + '#xg-promo .xg-pc{gap:.3em}#xg-promo .xg-pc i{min-width:0;padding:0 .4em;border-radius:.3em}}';
 
     // aktuální "nástěnný" čas v Praze -> {y,mo,d,wd,h,mi,s}
     var fmt = null;
@@ -116,6 +120,25 @@
         + chip(d, "d") + chip(pad(h), "h") + chip(pad(m), "m") + chip(pad(s), "s");
     }
 
+    /* Vše vždy na jednom řádku: když se obsah nevejde, zmenšuj písmo po 0,5 px
+       (všechny rozměry uvnitř jsou v em, takže se zmenší úměrně). */
+    function fit() {
+      bar.style.removeProperty("font-size");
+      var cs = getComputedStyle(bar);
+      var avail = bar.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+      if (avail <= 0) return;                                   // skrytá karta apod.
+      var pm = bar.querySelector(".xg-pm");
+      var fs = parseFloat(cs.fontSize) || 16;
+      function need() {
+        return pm.getBoundingClientRect().width + cd.getBoundingClientRect().width
+          + (parseFloat(getComputedStyle(bar).columnGap) || 0);
+      }
+      while (fs > 9 && need() > avail) {
+        fs -= 0.5;
+        bar.style.setProperty("font-size", fs + "px", "important");
+      }
+    }
+
     /* Na mobilu má Apollo horní lištu i hlavičku position:fixed (top 0 / 50px)
        a obsah odsazený padding-top. Pruh tam proto připneme nahoru taky a
        pevné prvky + odsazení obsahu posuneme o jeho skutečnou výšku. */
@@ -138,6 +161,7 @@
       var fixedMode = false;
       each(function (el) { if (getComputedStyle(el).position === "fixed") fixedMode = true; });
       bar.classList.toggle("xg-fixed", fixedMode);
+      fit();
       var hgt = bar.offsetHeight;
       if (fixedMode) {
         each(function (el) {
@@ -192,6 +216,9 @@
         new ResizeObserver(function () {
           if (lastKey !== "static" && lastKey !== "fixed:" + bar.offsetHeight) relayout();
         }).observe(bar);
+      }
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(relayout);                    // přeměřit po načtení Roboto
       }
     }
 
