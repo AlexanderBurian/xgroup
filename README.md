@@ -10,8 +10,10 @@ Do pole **Vzhled a obsah → Editor → HTML kód → Zápatí** vložte obsah s
 Loader používá konkrétní commitovou URL, aby prohlížeč nemohl držet starší
 verzi skriptu z dlouhodobé cache CDN.
 
-Jediný loader zajišťuje také nastavení homepage carouselu, homepage recenze,
-návratový titulek neaktivní karty a doplnění IČO v zápatí.
+Jediný loader zajišťuje také nastavení homepage carouselu, návratový titulek
+neaktivní karty, popup „Zboží přidáno do košíku“ (otevře se hned po kliknutí,
+nativní zelenou bublinu Shoptetu skryje) a zvýraznění kategorie VELKOOBCHOD v menu.
+(Homepage recenze a IČO v zápatí byly odebrány v 04a5e69.)
 
 Na všech stránkách také přidá horní zelený promo pruh „SLEVA 10% NA VŠE : NAVSE10“
 s odpočtem do nejbližší neděle 24:00 (Europe/Prague); po vypršení se sám přepne

@@ -258,6 +258,332 @@
   })();
 
   /* ------------------------------------------------------------------ *
+   *  Detail produktu: "Doporučujeme přidat k nákupu" (obnoveno z e36a334)
+   *  3 koupitelné produkty z aktuální kategorie, zaškrtnuté se přidají do
+   *  košíku spolu s hlavním produktem přes nativní Shoptet API.
+   * ------------------------------------------------------------------ */
+  (function () {
+    if (window.__xgKratasDetailRecs) return;
+    window.__xgKratasDetailRecs = true;
+
+    var CONFIG = {
+      limit: 3,
+      widgetId: "xg-kratas-recommendations",
+      title: "Doporučujeme přidat k nákupu",
+      subtitle: "Zaškrtněte, co chcete přidat do košíku spolu s tímto produktem."
+    };
+
+    function cleanText(value) {
+      return (value || "").replace(/\s+/g, " ").trim();
+    }
+
+    function absoluteUrl(value) {
+      try {
+        return new URL(value, window.location.origin).href;
+      } catch (error) {
+        return value || "";
+      }
+    }
+
+    function getCurrentProductId() {
+      var meta = document.querySelector(
+        '#product-detail-form meta[itemprop="productID"], .p-detail meta[itemprop="productID"]'
+      );
+      return meta ? cleanText(meta.getAttribute("content")) : "";
+    }
+
+    function getCurrentCategoryUrl() {
+      var links = document.querySelectorAll(
+        ".breadcrumbs a[href], .breadcrumb a[href], [data-testid='breadcrumbs'] a[href]"
+      );
+      for (var index = links.length - 1; index >= 0; index -= 1) {
+        var href = links[index].getAttribute("href");
+        if (!href) continue;
+        var url = absoluteUrl(href);
+        try {
+          if (new URL(url).pathname !== "/") return url;
+        } catch (error) {
+          continue;
+        }
+      }
+      return "";
+    }
+
+    function parseProducts(html) {
+      var parsed = new DOMParser().parseFromString(html, "text/html");
+      var currentProductId = getCurrentProductId();
+      var cards = parsed.querySelectorAll(
+        "#products.products-page .product .p[data-micro-product-id]"
+      );
+      var products = [];
+      var usedIds = Object.create(null);
+
+      Array.prototype.forEach.call(cards, function (card) {
+        if (products.length >= CONFIG.limit) return;
+
+        var id = cleanText(card.getAttribute("data-micro-product-id"));
+        var link = card.querySelector("a.name[data-micro='url'], a.name");
+        var name = card.querySelector("[data-micro='name'], [data-testid='productCardName']");
+        var image = card.querySelector("a.image img, img");
+        var price = card.querySelector(".price-final, [data-testid='productCardPrice']");
+        var description = card.querySelector(".p-desc");
+        var code = cleanText(
+          (card.querySelector("[data-micro='sku']") || {}).textContent
+        );
+        var addButton = card.querySelector(
+          ".add-to-cart-button, [data-testid='buttonAddToCart']"
+        );
+
+        if (
+          !id ||
+          !code ||
+          id === currentProductId ||
+          usedIds[id] ||
+          !link ||
+          !name ||
+          !image ||
+          !price ||
+          !addButton
+        ) {
+          return;
+        }
+
+        usedIds[id] = true;
+        products.push({
+          id: id,
+          code: code,
+          url: absoluteUrl(link.getAttribute("href")),
+          name: cleanText(name.textContent),
+          image: absoluteUrl(
+            image.getAttribute("data-src") ||
+              image.getAttribute("data-lazy-src") ||
+              image.getAttribute("src")
+          ),
+          price: cleanText(price.textContent),
+          description: cleanText(description && description.textContent)
+        });
+      });
+
+      return products;
+    }
+
+    function createElement(tagName, className, text) {
+      var element = document.createElement(tagName);
+      if (className) element.className = className;
+      if (typeof text === "string") element.textContent = text;
+      return element;
+    }
+
+    function createProductRow(product, index) {
+      var row = createElement("div", "xg-rec__item");
+      row.setAttribute("data-product-id", product.id);
+
+      var checkboxId = CONFIG.widgetId + "-item-" + index;
+      var checkbox = createElement("input", "xg-rec__checkbox");
+      checkbox.type = "checkbox";
+      checkbox.id = checkboxId;
+      checkbox.checked = false;
+      checkbox.value = product.id;
+      checkbox.setAttribute("data-product-code", product.code);
+      checkbox.setAttribute("aria-label", "Přidat: " + product.name);
+
+      var checkLabel = createElement("label", "xg-rec__check-label");
+      checkLabel.htmlFor = checkboxId;
+      checkLabel.appendChild(checkbox);
+      var checkMark = createElement("span", "xg-rec__check-mark");
+      checkMark.setAttribute("aria-hidden", "true");
+      checkLabel.appendChild(checkMark);
+
+      var imageLink = createElement("a", "xg-rec__image-link");
+      imageLink.href = product.url;
+      imageLink.setAttribute("aria-label", product.name);
+      var image = createElement("img", "xg-rec__image");
+      image.src = product.image;
+      image.alt = "";
+      image.loading = "lazy";
+      image.width = 72;
+      image.height = 72;
+      imageLink.appendChild(image);
+
+      var content = createElement("div", "xg-rec__content");
+      var nameLink = createElement("a", "xg-rec__name", product.name);
+      nameLink.href = product.url;
+      content.appendChild(nameLink);
+      if (product.description) {
+        content.appendChild(createElement("div", "xg-rec__description", product.description));
+      }
+
+      var infoLink = createElement("a", "xg-rec__info", "i");
+      infoLink.href = product.url;
+      infoLink.setAttribute("aria-label", "Detail produktu: " + product.name);
+      infoLink.title = "Detail produktu";
+
+      var price = createElement("div", "xg-rec__price", product.price);
+
+      row.appendChild(checkLabel);
+      row.appendChild(imageLink);
+      row.appendChild(content);
+      row.appendChild(infoLink);
+      row.appendChild(price);
+      return row;
+    }
+
+    function injectStyles() {
+      if (document.getElementById(CONFIG.widgetId + "-styles")) return;
+
+      var style = document.createElement("style");
+      style.id = CONFIG.widgetId + "-styles";
+      style.textContent =
+        "#" + CONFIG.widgetId + "{" +
+          "box-sizing:border-box;width:100%;margin:24px 0;padding:24px 24px 14px;" +
+          "border:1px solid #dbe3ee;border-radius:18px;background:#f5f6f8;" +
+          "color:var(--colors-foregrounds-content-primary,#1f1f1f);font-family:inherit" +
+        "}" +
+        "#" + CONFIG.widgetId + " *,#" + CONFIG.widgetId + " *:before,#" + CONFIG.widgetId + " *:after{box-sizing:border-box}" +
+        "#" + CONFIG.widgetId + " .xg-rec__title{margin:0 0 3px;font:700 20px/1.25 inherit;color:inherit}" +
+        "#" + CONFIG.widgetId + " .xg-rec__subtitle{margin:0 0 14px;color:var(--colors-foregrounds-content-secondary,#4d4d4d);font:400 14px/1.45 inherit}" +
+        "#" + CONFIG.widgetId + " .xg-rec__list{display:block}" +
+        "#" + CONFIG.widgetId + " .xg-rec__item{display:grid;grid-template-columns:26px 78px minmax(0,1fr) 22px max-content;align-items:center;gap:13px;min-height:96px;padding:9px 0}" +
+        "#" + CONFIG.widgetId + " .xg-rec__check-label{position:relative;display:block;width:24px;height:24px;margin:0;cursor:pointer}" +
+        "#" + CONFIG.widgetId + " .xg-rec__checkbox{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}" +
+        "#" + CONFIG.widgetId + " .xg-rec__check-mark{display:block;width:24px;height:24px;border:2px solid #c4d2e4;border-radius:7px;background:#fff;transition:background .15s,border-color .15s,box-shadow .15s}" +
+        "#" + CONFIG.widgetId + " .xg-rec__checkbox:checked+.xg-rec__check-mark{border-color:#55cc00;background:#55cc00}" +
+        "#" + CONFIG.widgetId + " .xg-rec__checkbox:checked+.xg-rec__check-mark:after{content:'';display:block;width:10px;height:6px;margin:6px 0 0 5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg)}" +
+        "#" + CONFIG.widgetId + " .xg-rec__checkbox:focus-visible+.xg-rec__check-mark{outline:3px solid var(--colors-focus-primary,#09367e);outline-offset:2px}" +
+        "#" + CONFIG.widgetId + " .xg-rec__image-link{display:flex;width:78px;height:78px;align-items:center;justify-content:center;border:1px solid #dbe3ee;border-radius:12px;background:#fff;overflow:hidden}" +
+        "#" + CONFIG.widgetId + " .xg-rec__image{display:block;width:100%;height:100%;object-fit:contain}" +
+        "#" + CONFIG.widgetId + " .xg-rec__content{min-width:0}" +
+        "#" + CONFIG.widgetId + " .xg-rec__name{display:block;color:inherit;font:700 15px/1.3 inherit;text-decoration:none}" +
+        "#" + CONFIG.widgetId + " .xg-rec__name:hover{color:var(--color-primary-hover,#2ebd46)}" +
+        "#" + CONFIG.widgetId + " .xg-rec__description{display:-webkit-box;margin-top:3px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:var(--colors-foregrounds-content-tertiary,#767676);font:400 13px/1.35 inherit}" +
+        "#" + CONFIG.widgetId + " .xg-rec__info,#" + CONFIG.widgetId + " .xg-rec__info:hover,#" + CONFIG.widgetId + " .xg-rec__info:focus{display:flex;width:18px;height:18px;align-items:center;justify-content:center;border:1px solid #9aabc0;border-radius:50%;background:transparent;color:#8193aa;font:700 11px/1 inherit;text-decoration:none;box-shadow:none;outline:none}" +
+        "#" + CONFIG.widgetId + " .xg-rec__price{padding-left:4px;color:inherit;font:700 16px/1.25 inherit;white-space:nowrap;text-align:right}" +
+        "@media(max-width:767px){" +
+          "#" + CONFIG.widgetId + "{margin:18px 0;padding:19px 14px 11px;border-radius:16px}" +
+          "#" + CONFIG.widgetId + " .xg-rec__title{font-size:18px}" +
+          "#" + CONFIG.widgetId + " .xg-rec__item{grid-template-columns:24px 66px minmax(0,1fr) 18px;gap:10px;min-height:86px}" +
+          "#" + CONFIG.widgetId + " .xg-rec__image-link{width:66px;height:66px;border-radius:10px}" +
+          "#" + CONFIG.widgetId + " .xg-rec__price{grid-column:3/5;padding:0;text-align:left;font-size:15px}" +
+          "#" + CONFIG.widgetId + " .xg-rec__description{-webkit-line-clamp:1}" +
+        "}";
+      document.head.appendChild(style);
+    }
+
+    function buildWidget(products) {
+      var widget = createElement("section", "xg-rec");
+      widget.id = CONFIG.widgetId;
+      widget.setAttribute("aria-labelledby", CONFIG.widgetId + "-title");
+
+      var title = createElement("h2", "xg-rec__title", CONFIG.title);
+      title.id = CONFIG.widgetId + "-title";
+      widget.appendChild(title);
+      widget.appendChild(createElement("p", "xg-rec__subtitle", CONFIG.subtitle));
+
+      var list = createElement("div", "xg-rec__list");
+      products.forEach(function (product, index) {
+        list.appendChild(createProductRow(product, index));
+      });
+      widget.appendChild(list);
+      return widget;
+    }
+
+    function installCartIntegration(widget, productForm) {
+      var pendingProducts = [];
+      var extraInFlight = false;
+
+      productForm.addEventListener(
+        "submit",
+        function () {
+          pendingProducts = Array.prototype.map.call(
+            widget.querySelectorAll(".xg-rec__checkbox:checked"),
+            function (checkbox) {
+              return {
+                id: checkbox.value,
+                code: checkbox.getAttribute("data-product-code") || ""
+              };
+            }
+          );
+          extraInFlight = false;
+        },
+        true
+      );
+
+      document.addEventListener("ShoptetCartAddCartItem", function () {
+        if (!pendingProducts.length) {
+          extraInFlight = false;
+          return;
+        }
+
+        if (extraInFlight) extraInFlight = false;
+        if (extraInFlight || !pendingProducts.length) return;
+
+        var product = pendingProducts.shift();
+        extraInFlight = true;
+
+        window.setTimeout(function () {
+          try {
+            if (
+              !window.shoptet ||
+              !window.shoptet.cartShared ||
+              typeof window.shoptet.cartShared.addToCart !== "function"
+            ) {
+              throw new Error("Shoptet cart API is not available.");
+            }
+            window.shoptet.cartShared.addToCart(
+              { productCode: product.code, amount: 1 },
+              true
+            );
+          } catch (error) {
+            pendingProducts = [];
+            extraInFlight = false;
+            if (window.console && typeof window.console.error === "function") {
+              window.console.error("[xgroup] Recommendation could not be added.", error);
+            }
+          }
+        }, 0);
+      });
+    }
+
+    function initRecommendations() {
+      if (document.getElementById(CONFIG.widgetId)) return;
+      var productForm = document.getElementById("product-detail-form");
+      var insertionPoint = document.querySelector(".p-info-wrapper .add-to-cart");
+      if (!productForm || !insertionPoint || !document.body.classList.contains("type-detail")) {
+        return;
+      }
+
+      var categoryUrl = getCurrentCategoryUrl();
+      if (!categoryUrl) return;
+
+      fetch(categoryUrl, { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok) throw new Error("Category request failed: " + response.status);
+          return response.text();
+        })
+        .then(function (html) {
+          var products = parseProducts(html);
+          if (!products.length || document.getElementById(CONFIG.widgetId)) return;
+
+          injectStyles();
+          var widget = buildWidget(products);
+          insertionPoint.parentNode.insertBefore(widget, insertionPoint);
+          installCartIntegration(widget, productForm);
+        })
+        .catch(function (error) {
+          if (window.console && typeof window.console.error === "function") {
+            window.console.error("[xgroup] Recommendations could not be loaded.", error);
+          }
+        });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initRecommendations, { once: true });
+    } else {
+      initRecommendations();
+    }
+  })();
+
+  /* ------------------------------------------------------------------ *
    *  DATA – produkty (id, priceId potřebné pro přidání do košíku)
    * ------------------------------------------------------------------ */
   var CDN = "https://cdn.myshoptet.com/usr/www.kratas.cz/user/shop/";
@@ -401,6 +727,7 @@
     + '#xg-reco .xg-step{display:inline-flex;align-items:center;border:1px solid #d9d9df;border-radius:6px;overflow:hidden;height:32px}'
     + '#xg-reco .xg-step button{width:32px;height:30px;border:0;background:#f4f6f9;color:#2093D9;font-size:17px;cursor:pointer;line-height:1}'
     + '#xg-reco .xg-step button:hover{background:#e7eef6}'
+    + '#xg-reco .xg-step button:disabled{opacity:.45;cursor:default}'
     + '#xg-reco .xg-step .xg-q{min-width:46px;text-align:center;font-size:14px;color:#1a1a1f}'
     + '#xg-reco .xg-added .xg-ap{font-size:18px;font-weight:700;color:#0f0f0f;white-space:nowrap;flex:0 0 auto}'
     + '#xg-reco .xg-sec{font-size:16px;font-weight:700;color:#14141a;margin:18px 0 12px}'
@@ -484,16 +811,18 @@
   }
 
   function renderAdded(item) {
+    current = item;
     var qty = item.amount || 1;
     var unit = item.unit || 0;
+    var dis = item.itemId ? '' : ' disabled';   // +/- až po potvrzení košíkem
     addedEl.innerHTML = ''
-      + '<img src="' + esc(item.img) + '" alt="" loading="lazy">'
+      + '<img src="' + esc(item.img) + '" alt="">'
       + '<div class="xg-an">'
       +   '<b>' + esc(item.name) + '</b>'
       +   '<div class="xg-step">'
-      +     '<button type="button" data-dec aria-label="Méně">&minus;</button>'
+      +     '<button type="button" data-dec aria-label="Méně"' + dis + '>&minus;</button>'
       +     '<span class="xg-q"><span class="xg-qn">' + qty + '</span> ks</span>'
-      +     '<button type="button" data-inc aria-label="Více">+</button>'
+      +     '<button type="button" data-inc aria-label="Více"' + dis + '>+</button>'
       +   '</div>'
       + '</div>'
       + '<div class="xg-ap">' + fmt(unit * qty) + '</div>';
@@ -589,12 +918,106 @@
     items.forEach(function (it) { if (it.priceId) m[it.priceId] = it.amount; });
     return m;
   }
+  function isOpen() { return !!(root && root.classList.contains("xg-open")); }
+
+  /* Okamžité otevření: popup se otevře už při odeslání formuláře "Do košíku"
+     z údajů na stránce (název, obrázek, cena). Po potvrzení Shoptetem se jen
+     doplní počet kusů v košíku a ožije +/-. Když přidání selže, popup zavřeme. */
+  var pending = null;         // { priceId, item, at }
+  var failTimer = 0;
+  function pick(scope, sels) {
+    for (var i = 0; i < sels.length; i++) {
+      var el = scope.querySelector(sels[i]);
+      if (el) return el;
+    }
+    return null;
+  }
+  function productFromForm(form) {
+    var priceId = (form.querySelector("input[name='priceId']") || {}).value;
+    if (!priceId) return null;
+    var detail = form.id === "product-detail-form";
+    var scope = detail ? document : (form.closest(".product, .p") || form);
+    var nameEl = detail ? pick(document, [".p-detail-inner-header h1", "h1"])
+                        : pick(scope, ["[data-testid='productCardName']", "a.name", ".name"]);
+    var imgEl = detail ? pick(document, [".p-image img", ".p-main-image img", ".p-image-wrapper img"])
+                       : pick(scope, ["a.image img", "img"]);
+    var priceEl = pick(detail ? (form.closest(".p-detail, .p-info-wrapper") || document) : scope,
+                       [".price-final-holder", ".price-final", "[data-testid='productCardPrice']"]);
+    var amountEl = form.querySelector("input[name='amount']");
+    return {
+      priceId: String(priceId),
+      itemId: null,
+      name: nameEl ? nameEl.textContent.trim().replace(/\s+/g, " ") : "",
+      img: imgEl ? (imgEl.getAttribute("data-src") || imgEl.getAttribute("src") || "") : "",
+      unit: priceEl ? parsePrice(priceEl.textContent) : null,
+      amount: amountEl ? (parseInt(amountEl.value, 10) || 1) : 1
+    };
+  }
+  function onAddSubmit(e) {
+    var form = e.target;
+    if (!form || form.tagName !== "FORM" || !/addCartItem/i.test(form.getAttribute("action") || "")) return;
+    // nevybraná varianta -> Shoptet nic nepřidá, popup neotvírat
+    var selects = form.querySelectorAll("select");
+    for (var i = 0; i < selects.length; i++) if (!selects[i].value) return;
+    var item = productFromForm(form);
+    if (!item || !item.name) return;
+    pending = { priceId: item.priceId, item: item, at: Date.now() };
+    open(item);
+    clearTimeout(failTimer);
+    failTimer = setTimeout(function () {                      // nepotvrzeno -> zavřít
+      if (pending && pending.priceId === item.priceId) { pending = null; close(); }
+    }, 6000);
+  }
+
+  /* Nativní zelená bublina Shoptetu "Produkt byl přidán do košíku" – nahrazuje ji
+     náš popup. Chybové hlášky (např. nedostatek zboží) necháváme a popup zavřeme. */
+  var MSG_CSS = '.messages .msg-success:has(a[href*="/kosik"]){display:none!important}';
+  function sweepMessages() {
+    [].slice.call(document.querySelectorAll(".messages .msg")).forEach(function (m) {
+      if (m.classList.contains("msg-success") && m.querySelector('a[href*="/kosik"]')) {
+        m.style.setProperty("display", "none", "important");
+      } else if (m.classList.contains("msg-error") && pending) {
+        pending = null; clearTimeout(failTimer); close();
+      }
+    });
+  }
+  function watchMessages() {
+    var st = document.createElement("style");
+    st.id = "xg-msg-css";
+    st.textContent = MSG_CSS;
+    try { document.head.appendChild(st); } catch (e) {}
+    if (!window.MutationObserver) return;
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var t = ms[i].target;
+        if (t && t.nodeType === 1 && (t.classList.contains("messages") || (t.closest && t.closest(".messages")) ||
+            [].some.call(ms[i].addedNodes, function (n) { return n.nodeType === 1 && (n.classList.contains("messages") || n.classList.contains("msg")); }))) {
+          sweepMessages(); return;
+        }
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  }
 
   function onCartUpdated() {
     getCart().then(function (items) {
       var now = snapshot(items);
       if (Date.now() < suppressUntil) { baseline = now; return; }   // vlastní akce
-      // najdi přidaný / navýšený produkt
+      // potvrzení okamžitě otevřeného popupu -> doplnit itemId a množství z košíku
+      if (pending && Date.now() - pending.at < 15000) {
+        for (var j = 0; j < items.length; j++) {
+          if (items[j].priceId === pending.priceId) {
+            var p = pending.item, c = items[j];
+            pending = null; clearTimeout(failTimer);
+            baseline = now;
+            if (isOpen() && current && current.priceId === p.priceId) {
+              renderAdded({ priceId: c.priceId, itemId: c.itemId, amount: c.amount,
+                            unit: c.unit || p.unit, name: p.name || c.name, img: p.img || c.img });
+            }
+            return;
+          }
+        }
+      }
+      // najdi přidaný / navýšený produkt (přidání odjinud než z formuláře)
       var addedItem = null;
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
@@ -602,13 +1025,17 @@
         if (it.amount > prev) { addedItem = it; break; }
       }
       baseline = now;
-      if (addedItem) open(addedItem);
+      if (addedItem && !isOpen()) open(addedItem);   // otevřený popup nepřekreslovat
     });
   }
 
   function start() {
+    if (!root) build();          // DOM + styly popupu předem -> první otevření bez prodlevy
     getCart().then(function (items) { baseline = snapshot(items); });
+    document.addEventListener("submit", onAddSubmit, true);
+    document.addEventListener("ShoptetCartAddCartItem", function () { clearTimeout(failTimer); sweepMessages(); });
     document.addEventListener("ShoptetCartUpdated", onCartUpdated);
+    watchMessages();
   }
 
   if (window.shoptet) start();
