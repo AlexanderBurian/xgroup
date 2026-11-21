@@ -551,6 +551,11 @@
       if (!productForm || !insertionPoint || !document.body.classList.contains("type-detail")) {
         return;
       }
+      // produkty z VELKOOBCHODU widget nemají (hlavní kategorie nebo drobečková navigace)
+      if (document.body.classList.contains("in-velkoobchod") ||
+          document.querySelector(".breadcrumbs a[href$='/velkoobchod/'], [data-testid='breadcrumbs'] a[href$='/velkoobchod/']")) {
+        return;
+      }
 
       var categoryUrl = getCurrentCategoryUrl();
       if (!categoryUrl) return;
