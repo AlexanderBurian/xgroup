@@ -34,6 +34,161 @@
     });
   })();
 
+  /* Promo pruh úplně nahoře: sleva NAVSE10 + odpočet do neděle 24:00
+     (Europe/Prague). Po vypršení se sám přepne na další neděli. */
+  (function () {
+    if (window.__xgKratasPromo) return;
+    window.__xgKratasPromo = true;
+
+    var TZ = "Europe/Prague";
+    var css = ''
+      + '#xg-promo{background:#2fa84f;color:#fff;font-family:Roboto,"Segoe UI",Arial,sans-serif;'
+      + 'font-size:15px;line-height:1.3;font-weight:500;text-align:center;padding:8px 12px;'
+      + 'display:flex;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:16px;row-gap:3px;'
+      + 'width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;text-shadow:0 1px 1px rgba(0,0,0,.18);position:relative;z-index:1}'
+      + '#xg-promo.xg-fixed{position:fixed;top:0;left:0;right:0;z-index:9}'
+      /* tlačítko MENU je při otevřeném menu fixed top:0 -> posunout pod pruh */
+      + 'body.navigation-window-visible .toggle-window[data-target="navigation"]{margin-top:var(--xg-promo-h,0px)}'
+      /* přihlášení / košík na mobilu: fixed top:50px pod lištou -> taky posunout */
+      + '.user-action .popup-widget{margin-top:var(--xg-promo-h,0px)}'
+      + '#xg-promo *{box-sizing:border-box}'
+      + '#xg-promo .xg-pm{overflow-wrap:anywhere}'
+      + '#xg-promo .xg-pm strong{font-weight:800;letter-spacing:.04em;white-space:nowrap}'
+      + '#xg-promo .xg-pc{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:14px}'
+      + '#xg-promo .xg-pc b{font-weight:700}'
+      + '@media(max-width:767px){#xg-promo{font-size:13px;padding:6px 10px;column-gap:10px}#xg-promo .xg-pc{font-size:12.5px}}'
+      + '@media(max-width:340px){#xg-promo{font-size:12px}#xg-promo .xg-pc{font-size:11.5px}}';
+
+    // aktuální "nástěnný" čas v Praze -> {y,mo,d,wd,h,mi,s}
+    var fmt = null;
+    try {
+      fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ, hourCycle: "h23", weekday: "short",
+        year: "numeric", month: "numeric", day: "numeric",
+        hour: "numeric", minute: "numeric", second: "numeric"
+      });
+    } catch (e) { fmt = null; }
+    var WD = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    function wall(t) {
+      var d = new Date(t);
+      if (!fmt) {
+        return { y: d.getFullYear(), mo: d.getMonth() + 1, d: d.getDate(), wd: d.getDay(),
+                 h: d.getHours(), mi: d.getMinutes(), s: d.getSeconds() };
+      }
+      var p = {};
+      fmt.formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+      return { y: +p.year, mo: +p.month, d: +p.day, wd: WD[p.weekday],
+               h: +p.hour % 24, mi: +p.minute, s: +p.second };
+    }
+    // posun Prahy vůči UTC v čase t (ms)
+    function offset(t) {
+      var w = wall(t);
+      return Date.UTC(w.y, w.mo - 1, w.d, w.h, w.mi, w.s) - Math.floor(t / 1000) * 1000;
+    }
+    // okamžik nejbližší neděle 24:00 (= pondělí 00:00) pražského času
+    function nextDeadline(now) {
+      var w = wall(now);
+      var add = (7 - w.wd) % 7 + 1;                    // dní do pondělí 00:00
+      var guess = Date.UTC(w.y, w.mo - 1, w.d + add, 0, 0, 0);
+      return guess - offset(guess - offset(guess));    // 2. průchod kvůli letnímu času
+    }
+
+    var bar, cd, deadline = 0;
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function tick() {
+      var now = Date.now();
+      if (!deadline || now >= deadline) deadline = nextDeadline(now);
+      var s = Math.max(0, Math.floor((deadline - now) / 1000));
+      var d = Math.floor(s / 86400); s -= d * 86400;
+      var h = Math.floor(s / 3600); s -= h * 3600;
+      var m = Math.floor(s / 60); s -= m * 60;
+      cd.innerHTML = 'Končí za <b>' + d + '</b>d <b>' + pad(h) + '</b>h <b>'
+        + pad(m) + '</b>m <b>' + pad(s) + '</b>s';
+    }
+
+    /* Na mobilu má Apollo horní lištu i hlavičku position:fixed (top 0 / 50px)
+       a obsah odsazený padding-top. Pruh tam proto připneme nahoru taky a
+       pevné prvky + odsazení obsahu posuneme o jeho skutečnou výšku. */
+    var FIXED_SEL = [".top-navigation-bar", "#header", "#navigation"];
+    var lastKey = "";
+    function each(fn) {
+      FIXED_SEL.forEach(function (sel) {
+        [].slice.call(document.querySelectorAll(sel)).forEach(fn);
+      });
+    }
+    function layout() {
+      var ow = document.querySelector(".overall-wrapper");
+      // #header má "transition: top .6s" – bez vypnutí by getComputedStyle vracel
+      // mezihodnotu animace (posun by se načítal opakovaně) a hlavička by "sjížděla"
+      each(function (el) {
+        el.style.setProperty("transition", "none", "important");
+        el.style.removeProperty("top");
+      });
+      if (ow) ow.style.removeProperty("padding-top");
+      var fixedMode = false;
+      each(function (el) { if (getComputedStyle(el).position === "fixed") fixedMode = true; });
+      bar.classList.toggle("xg-fixed", fixedMode);
+      var hgt = bar.offsetHeight;
+      if (fixedMode) {
+        each(function (el) {
+          var cs = getComputedStyle(el);
+          if (cs.position !== "fixed") return;
+          el.style.setProperty("top", ((parseFloat(cs.top) || 0) + hgt) + "px", "important");
+        });
+        if (ow) {
+          ow.style.setProperty("padding-top",
+            ((parseFloat(getComputedStyle(ow).paddingTop) || 0) + hgt) + "px", "important");
+        }
+      }
+      document.documentElement.style.setProperty("--xg-promo-h", (fixedMode ? hgt : 0) + "px");
+      void document.body.offsetHeight;                         // použij bez animace
+      each(function (el) { el.style.removeProperty("transition"); });
+      lastKey = fixedMode ? "fixed:" + hgt : "static";
+    }
+    var raf = 0;
+    function relayout() {
+      if (raf) return;
+      var run = function () { raf = 0; layout(); };
+      raf = window.requestAnimationFrame ? window.requestAnimationFrame(run) : setTimeout(run, 16);
+    }
+
+    function mount() {
+      if (document.getElementById("xg-promo")) return;
+      var st = document.createElement("style");
+      st.id = "xg-promo-css";
+      st.textContent = css;
+      document.head.appendChild(st);
+
+      bar = document.createElement("div");
+      bar.id = "xg-promo";
+      bar.setAttribute("role", "region");
+      bar.setAttribute("aria-label", "Akce: sleva 10 % na vše");
+      bar.innerHTML = '<span class="xg-pm">SLEVA 10% NA VŠE : <strong>NAVSE10</strong></span>'
+        + '<span class="xg-pc" aria-live="off"></span>';
+      cd = bar.querySelector(".xg-pc");
+
+      var anchor = document.querySelector(".overall-wrapper") || document.body.firstChild;
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(bar, anchor);
+      else document.body.insertBefore(bar, document.body.firstChild);
+
+      tick();
+      setInterval(tick, 1000);
+
+      layout();
+      window.addEventListener("resize", relayout);
+      window.addEventListener("orientationchange", relayout);
+      window.addEventListener("load", relayout);                 // dočtené fonty
+      if (window.ResizeObserver) {
+        new ResizeObserver(function () {
+          if (lastKey !== "static" && lastKey !== "fixed:" + bar.offsetHeight) relayout();
+        }).observe(bar);
+      }
+    }
+
+    if (document.body) mount();
+    else document.addEventListener("DOMContentLoaded", mount);
+  })();
+
   /* ------------------------------------------------------------------ *
    *  DATA – produkty (id, priceId potřebné pro přidání do košíku)
    * ------------------------------------------------------------------ */
