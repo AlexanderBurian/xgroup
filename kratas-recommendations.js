@@ -48,15 +48,14 @@
       + 'font-size:16px;line-height:1.2;font-weight:700;text-align:center;padding:12px 14px;min-height:52px;'
       + 'display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;justify-content:center;column-gap:1.25em;'
       + 'width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;text-shadow:0 0 2px rgba(0,0,0,.3);position:relative;z-index:1}'
-      /* mobil: pruh je uvnitř fixní horní lišty Apolla -> jezdí s ní */
-      + '#xg-promo.xg-in-top{position:absolute;left:0;right:0;z-index:2;margin:0}'
-      /* styly Apolla pro texty v liště (.top-navigation-bar span …) nesmí pruh přebarvit */
-      + '#xg-promo span,#xg-promo strong,#xg-promo b,#xg-promo small{color:inherit;font-family:inherit;'
-      + 'font-size:inherit;line-height:inherit;text-transform:none;background:none;margin:0;padding:0;border:0}'
+      /* mobil: pruh je jen úplně nahoře na stránce (při scrollu odjede), fixní
+         hlavička Apolla je pod ním posunutá o jeho ještě viditelnou část (--xg-off) */
+      + '#xg-promo.xg-abs{position:absolute;top:0;left:0;right:0;z-index:8;margin:0}'
+      + 'html.xg-mobile .top-navigation-bar,html.xg-mobile #header,html.xg-mobile #navigation{margin-top:var(--xg-off,0px)!important}'
       /* tlačítko MENU je při otevřeném menu fixed top:0 -> posunout pod pruh */
-      + 'body.navigation-window-visible .toggle-window[data-target="navigation"]{margin-top:var(--xg-promo-h,0px)}'
+      + 'body.navigation-window-visible .toggle-window[data-target="navigation"]{margin-top:var(--xg-off,0px)}'
       /* přihlášení / košík na mobilu: fixed top:50px pod lištou -> taky posunout */
-      + '.user-action .popup-widget{margin-top:var(--xg-promo-h,0px)}'
+      + '.user-action .popup-widget{margin-top:var(--xg-off,0px)}'
       + '#xg-promo *{box-sizing:border-box}'
       + '#xg-promo .xg-pm{flex:0 0 auto}'
       + '#xg-promo .xg-pm strong{font-weight:800;letter-spacing:.04em}'
@@ -172,19 +171,28 @@
       }
     }
 
-    /* Na mobilu má Apollo horní lištu (.top-navigation-bar, top 0, výška 50px)
-       i hlavičku (#header, #navigation, top 50px) position:fixed a obsah
-       odsazený padding-top. Pruh proto na mobilu vložíme PŘÍMO DO horní lišty
-       (jezdí s ní při scrollu stejně jako logo – i v Safari na iPhonu), lištu
-       zvětšíme o výšku pruhu a hlavičku + odsazení obsahu posuneme o totéž.
-       Na PC je pruh běžně v toku stránky nad .overall-wrapper. */
+    /* Na mobilu má Apollo horní lištu (.top-navigation-bar, top 0) i hlavičku
+       (#header, #navigation, top 50px) position:fixed a obsah odsazený padding-top.
+       Pruh má být JEN NAHOŘE na stránce: je absolutně na jejím začátku, obsah se
+       odsadí o jeho výšku a fixní hlavička se posune (margin-top: --xg-off) jen
+       o tu část pruhu, která je ještě vidět -> při scrollu pruh odjede a hlavička
+       plynule dojede k hornímu okraji. Na PC je pruh v toku stránky nad
+       .overall-wrapper. */
     var FIXED_SEL = [".top-navigation-bar", "#header", "#navigation"];
-    var SHIFT_SEL = ["#header", "#navigation"];
     var lastKey = "";
-    function each(fn, sels) {
-      (sels || FIXED_SEL).forEach(function (sel) {
+    var promoH = 0, lastOff = -1;
+    function each(fn) {
+      FIXED_SEL.forEach(function (sel) {
         [].slice.call(document.querySelectorAll(sel)).forEach(fn);
       });
+    }
+    function onScroll() {
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var off = promoH ? Math.max(0, Math.min(promoH, promoH - y)) : 0;
+      if (off !== lastOff) {
+        lastOff = off;
+        document.documentElement.style.setProperty("--xg-off", off + "px");
+      }
     }
     function home() {                                           // místo pruhu na PC
       var anchor = document.querySelector(".overall-wrapper");
@@ -196,47 +204,22 @@
     }
     function layout() {
       var ow = document.querySelector(".overall-wrapper");
-      var tn = document.querySelector(".top-navigation-bar");
-      // #header má "transition: top .6s" – bez vypnutí by getComputedStyle vracel
-      // mezihodnotu animace (posun by se načítal opakovaně) a hlavička by "sjížděla"
-      each(function (el) {
-        el.style.setProperty("transition", "none", "important");
-        el.style.removeProperty("top");
-      });
-      if (tn) tn.style.removeProperty("border-top");
-      bar.style.removeProperty("top");
       if (ow) ow.style.removeProperty("padding-top");
+      home();
       var fixedMode = false;
       each(function (el) { if (getComputedStyle(el).position === "fixed") fixedMode = true; });
-      var inTop = fixedMode && tn && getComputedStyle(tn).position === "fixed";
-      if (inTop) { if (tn.firstElementChild !== bar) tn.insertBefore(bar, tn.firstChild); }
-      else home();
-      bar.classList.toggle("xg-in-top", !!inTop);
+      bar.classList.toggle("xg-abs", fixedMode);
       document.documentElement.classList.toggle("xg-mobile", fixedMode);
       placeWholesale(fixedMode);
       fit();
       var hgt = bar.offsetHeight;
-      if (fixedMode) {
-        if (inTop) {
-          // průhledný horní okraj lišty = místo pro pruh; absolutně umístěné prvky
-          // lišty (logo top:0, kontakty top:49px) se počítají od vnitřku okraje,
-          // takže zůstanou pod pruhem
-          tn.style.setProperty("border-top", hgt + "px solid transparent", "important");
-          bar.style.setProperty("top", (-hgt) + "px");
-        }
-        each(function (el) {
-          var cs = getComputedStyle(el);
-          if (cs.position !== "fixed") return;
-          el.style.setProperty("top", ((parseFloat(cs.top) || 0) + hgt) + "px", "important");
-        }, inTop ? SHIFT_SEL : FIXED_SEL);
-        if (ow) {
-          ow.style.setProperty("padding-top",
-            ((parseFloat(getComputedStyle(ow).paddingTop) || 0) + hgt) + "px", "important");
-        }
+      if (fixedMode && ow) {
+        ow.style.setProperty("padding-top",
+          ((parseFloat(getComputedStyle(ow).paddingTop) || 0) + hgt) + "px", "important");
       }
-      document.documentElement.style.setProperty("--xg-promo-h", (fixedMode ? hgt : 0) + "px");
-      void document.body.offsetHeight;                         // použij bez animace
-      each(function (el) { el.style.removeProperty("transition"); });
+      promoH = fixedMode ? hgt : 0;
+      lastOff = -1;
+      onScroll();
       lastKey = fixedMode ? "fixed:" + hgt : "static";
     }
     var raf = 0;
@@ -269,6 +252,7 @@
       setInterval(tick, 1000);
 
       layout();
+      window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", relayout);
       window.addEventListener("orientationchange", relayout);
       window.addEventListener("load", relayout);                 // dočtené fonty
