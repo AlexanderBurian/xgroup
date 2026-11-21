@@ -48,7 +48,11 @@
       + 'font-size:16px;line-height:1.2;font-weight:700;text-align:center;padding:12px 14px;min-height:52px;'
       + 'display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;justify-content:center;column-gap:1.25em;'
       + 'width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;text-shadow:0 0 2px rgba(0,0,0,.3);position:relative;z-index:1}'
-      + '#xg-promo.xg-fixed{position:fixed;top:0;left:0;right:0;z-index:9}'
+      /* mobil: pruh je uvnitř fixní horní lišty Apolla -> jezdí s ní */
+      + '#xg-promo.xg-in-top{position:absolute;left:0;right:0;z-index:2;margin:0}'
+      /* styly Apolla pro texty v liště (.top-navigation-bar span …) nesmí pruh přebarvit */
+      + '#xg-promo span,#xg-promo strong,#xg-promo b,#xg-promo small{color:inherit;font-family:inherit;'
+      + 'font-size:inherit;line-height:inherit;text-transform:none;background:none;margin:0;padding:0;border:0}'
       /* tlačítko MENU je při otevřeném menu fixed top:0 -> posunout pod pruh */
       + 'body.navigation-window-visible .toggle-window[data-target="navigation"]{margin-top:var(--xg-promo-h,0px)}'
       /* přihlášení / košík na mobilu: fixed top:50px pod lištou -> taky posunout */
@@ -168,38 +172,63 @@
       }
     }
 
-    /* Na mobilu má Apollo horní lištu i hlavičku position:fixed (top 0 / 50px)
-       a obsah odsazený padding-top. Pruh tam proto připneme nahoru taky a
-       pevné prvky + odsazení obsahu posuneme o jeho skutečnou výšku. */
+    /* Na mobilu má Apollo horní lištu (.top-navigation-bar, top 0, výška 50px)
+       i hlavičku (#header, #navigation, top 50px) position:fixed a obsah
+       odsazený padding-top. Pruh proto na mobilu vložíme PŘÍMO DO horní lišty
+       (jezdí s ní při scrollu stejně jako logo – i v Safari na iPhonu), lištu
+       zvětšíme o výšku pruhu a hlavičku + odsazení obsahu posuneme o totéž.
+       Na PC je pruh běžně v toku stránky nad .overall-wrapper. */
     var FIXED_SEL = [".top-navigation-bar", "#header", "#navigation"];
+    var SHIFT_SEL = ["#header", "#navigation"];
     var lastKey = "";
-    function each(fn) {
-      FIXED_SEL.forEach(function (sel) {
+    function each(fn, sels) {
+      (sels || FIXED_SEL).forEach(function (sel) {
         [].slice.call(document.querySelectorAll(sel)).forEach(fn);
       });
     }
+    function home() {                                           // místo pruhu na PC
+      var anchor = document.querySelector(".overall-wrapper");
+      if (anchor && anchor.parentNode) {
+        if (bar.nextElementSibling !== anchor) anchor.parentNode.insertBefore(bar, anchor);
+      } else if (bar.parentNode !== document.body) {
+        document.body.insertBefore(bar, document.body.firstChild);
+      }
+    }
     function layout() {
       var ow = document.querySelector(".overall-wrapper");
+      var tn = document.querySelector(".top-navigation-bar");
       // #header má "transition: top .6s" – bez vypnutí by getComputedStyle vracel
       // mezihodnotu animace (posun by se načítal opakovaně) a hlavička by "sjížděla"
       each(function (el) {
         el.style.setProperty("transition", "none", "important");
         el.style.removeProperty("top");
       });
+      if (tn) tn.style.removeProperty("border-top");
+      bar.style.removeProperty("top");
       if (ow) ow.style.removeProperty("padding-top");
       var fixedMode = false;
       each(function (el) { if (getComputedStyle(el).position === "fixed") fixedMode = true; });
-      bar.classList.toggle("xg-fixed", fixedMode);
+      var inTop = fixedMode && tn && getComputedStyle(tn).position === "fixed";
+      if (inTop) { if (tn.firstElementChild !== bar) tn.insertBefore(bar, tn.firstChild); }
+      else home();
+      bar.classList.toggle("xg-in-top", !!inTop);
       document.documentElement.classList.toggle("xg-mobile", fixedMode);
       placeWholesale(fixedMode);
       fit();
       var hgt = bar.offsetHeight;
       if (fixedMode) {
+        if (inTop) {
+          // průhledný horní okraj lišty = místo pro pruh; absolutně umístěné prvky
+          // lišty (logo top:0, kontakty top:49px) se počítají od vnitřku okraje,
+          // takže zůstanou pod pruhem
+          tn.style.setProperty("border-top", hgt + "px solid transparent", "important");
+          bar.style.setProperty("top", (-hgt) + "px");
+        }
         each(function (el) {
           var cs = getComputedStyle(el);
           if (cs.position !== "fixed") return;
           el.style.setProperty("top", ((parseFloat(cs.top) || 0) + hgt) + "px", "important");
-        });
+        }, inTop ? SHIFT_SEL : FIXED_SEL);
         if (ow) {
           ow.style.setProperty("padding-top",
             ((parseFloat(getComputedStyle(ow).paddingTop) || 0) + hgt) + "px", "important");
