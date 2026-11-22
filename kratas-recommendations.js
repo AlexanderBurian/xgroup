@@ -40,6 +40,10 @@
     if (window.__xgKratasPromo) return;
     window.__xgKratasPromo = true;
 
+    /* Zapnutí/vypnutí zeleného promo pruhu (akce NAVSE10). false = pruh se
+       nezobrazí; zvýraznění a přesun VELKOOBCHODU v menu běží dál. */
+    var PROMO_ON = false;
+
     var TZ = "Europe/Prague";
     var css = ''
       /* zelená = barva loga KRATAS (#67b015) */
@@ -235,6 +239,26 @@
       st.id = "xg-promo-css";
       st.textContent = css;
       document.head.appendChild(st);
+
+      if (!PROMO_ON) {                       // pruh vypnutý -> jen menu (VELKOOBCHOD)
+        var mraf = 0;
+        var menuOnly = function () {
+          mraf = 0;
+          var mobile = false;
+          each(function (el) { if (getComputedStyle(el).position === "fixed") mobile = true; });
+          document.documentElement.classList.toggle("xg-mobile", mobile);
+          placeWholesale(mobile);
+        };
+        var again = function () {
+          if (mraf) return;
+          mraf = window.requestAnimationFrame ? window.requestAnimationFrame(menuOnly) : setTimeout(menuOnly, 16);
+        };
+        menuOnly();
+        window.addEventListener("resize", again);
+        window.addEventListener("orientationchange", again);
+        window.addEventListener("load", again);
+        return;
+      }
 
       bar = document.createElement("div");
       bar.id = "xg-promo";

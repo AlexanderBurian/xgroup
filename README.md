@@ -18,6 +18,7 @@ nativní zelenou bublinu Shoptetu skryje) a zvýraznění kategorie VELKOOBCHOD 
 Na všech stránkách také přidá horní zelený promo pruh „SLEVA 10% NA VŠE : NAVSE10“
 s odpočtem do nejbližší neděle 24:00 (Europe/Prague); po vypršení se sám přepne
 na další neděli. Text a kód se mění v bloku `__xgKratasPromo`.
+Pruh se zapíná/vypíná proměnnou `PROMO_ON` v tomto bloku (aktuálně vypnuto).
 
 Produktový widget se vykreslí jen na detailu produktu. Načte první tři koupitelné položky
 z aktuální kategorie detailu, vynechá právě otevřený produkt a zaškrtnuté
