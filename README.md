@@ -15,6 +15,12 @@ neaktivní karty, popup „Zboží přidáno do košíku“ (otevře se hned po 
 nativní zelenou bublinu Shoptetu skryje) a zvýraznění kategorie VELKOOBCHOD v menu.
 (Homepage recenze a IČO v zápatí byly odebrány v 04a5e69.)
 
+Loader načítá také registrační nabídku pro nepřihlášené návštěvníky. Zobrazí se
+nejvýše jednou za dva dny, neotvírá se v košíku, objednávce ani zákaznickém účtu
+a počká na zavření cookie lišty. Přihlášenému zákazníkovi na detailu produktu
+vysvětlí nativní 5% cenu pouze tehdy, když ji Shoptet u daného produktu skutečně
+vrátí.
+
 Na všech stránkách také přidá horní zelený promo pruh „SLEVA 10% NA VŠE : NAVSE10“
 s odpočtem do nejbližší neděle 24:00 (Europe/Prague); po vypršení se sám přepne
 na další neděli. Text a kód se mění v bloku `__xgKratasPromo`.
