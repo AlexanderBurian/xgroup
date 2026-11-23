@@ -69,7 +69,7 @@
     ".xg-kro,.xg-kro *{box-sizing:border-box}" +
     ".xg-kro{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;padding:16px;" +
       "font-family:Roboto,\"Segoe UI\",Arial,sans-serif}" +
-    ".xg-kro__dim{position:absolute;inset:0;background:rgba(23,50,10,.62);opacity:0;transition:opacity .2s ease}" +
+    ".xg-kro__dim{position:absolute;inset:0;background:rgba(0,0,0,.58);opacity:0;transition:opacity .2s ease}" +
     ".xg-kro__card{position:relative;width:100%;max-width:400px;margin-top:96px;padding:118px 28px 22px;" +
       "border-radius:16px;background:#fff;color:#17320a;text-align:center;box-shadow:0 18px 50px rgba(23,50,10,.28);" +
       "outline:0;opacity:0;transform:translateY(14px) scale(.98);" +
